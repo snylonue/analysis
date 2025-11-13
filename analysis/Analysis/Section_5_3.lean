@@ -255,9 +255,38 @@ theorem Real.ratCast_def (q:ℚ) : (q:Real) = LIM (fun _ ↦ q) := by rw [LIM_de
 /-- Exercise 5.3.3 -/
 @[simp]
 theorem Real.ratCast_inj (q r:ℚ) : (q:Real) = (r:Real) ↔ q = r := by
-  sorry
+  apply Iff.intro
+  . intro h
+    have q_seq := ratCast_def q
+    have r_seq := ratCast_def r
+    rw [q_seq, r_seq] at h
+    have heq := LIM_eq_LIM (Sequence.IsCauchy.const q) (Sequence.IsCauchy.const r)
+    apply Iff.mp heq at h
+    simp [Sequence.Equiv, Rat.EventuallyClose, Rat.CloseSeq] at h
+    apply Iff.mpr (Section_4_3.eq_if_close q r)
+    intro ε hε
+    obtain ⟨ n, hn1 ⟩ := h ε hε
+    have cond1 : 0 ≤ |n| := by simp
+    have cond2 : n ≤ |n| := le_abs_self n
+    have hn1' := hn1 (abs n) cond1 cond2 cond1 cond2
+    simp [cond1, cond2] at hn1'
+    exact hn1'
+  . intro h
+    have q_seq := ratCast_def q
+    have r_seq := ratCast_def r
+    rw [q_seq, r_seq]
+    have heq := LIM_eq_LIM (Sequence.IsCauchy.const q) (Sequence.IsCauchy.const r)
+    apply Iff.mpr heq
+    simp [Sequence.Equiv, Rat.EventuallyClose, Rat.CloseSeq]
+    intro ε hε
+    exists 0
+    intro n hn _ _ _
+    simp [hn]
+    apply Iff.mp (Section_4_3.eq_if_close q r)
+    . exact h
+    . exact hε
 
-instance Real.instOfNat {n:ℕ} : OfNat Real n where
+instance Real.itOfNat {n:ℕ} : OfNat Real n where
   ofNat := ((n:ℚ):Real)
 
 instance Real.instNatCast : NatCast Real where
