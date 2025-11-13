@@ -76,7 +76,26 @@ lemma Sequence.equiv_def (a b: ℕ → ℚ) :
 
 /-- Definition 5.2.6 (Equivalent sequences) -/
 lemma Sequence.equiv_iff (a b: ℕ → ℚ) : Equiv a b ↔ ∀ ε > 0, ∃ N, ∀ n ≥ N, |a n - b n| ≤ ε := by
-  sorry
+  apply Iff.intro
+  . intro h ε hε
+    simp [Equiv, Rat.EventuallyClose, Rat.CloseSeq] at h
+    obtain ⟨ n₀, hn₀ ⟩ := h ε hε
+    let n' : Nat := (abs n₀).toNat
+    exists n'
+    intro n hn
+    have hn' := by
+      calc n₀ ≤ n' := by simp [n', abs]
+        _ ≤ n := by simp [hn]
+    have hn₀' := hn₀ n (by simp) hn' (by simp) hn'
+    simp [hn', Rat.Close] at hn₀'
+    exact hn₀'
+  . simp [Equiv, Rat.EventuallyClose, Rat.CloseSeq]
+    intro h ε hε
+    obtain ⟨ n₀, hn₀ ⟩ := h ε hε
+    exists n₀
+    intro n hn1 hn2 _ _
+    simp [hn1, hn2, Rat.Close]
+    apply hn₀ n.toNat (by omega)
 
 /-- Proposition 5.2.8 -/
 lemma Sequence.equiv_example :
