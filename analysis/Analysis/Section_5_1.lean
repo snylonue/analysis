@@ -426,19 +426,14 @@ lemma Sequence.isBounded_of_isCauchy {a:Sequence} (h: a.IsCauchy) : a.IsBounded 
     let len := Fin ((n - a.n₀).toNat + 1)
     let seq' (i : len) : ℚ := a.seq (i + a.n₀)
     let bounded := IsBounded.finite seq'
-    obtain ⟨m₁, hm₁⟩ := bounded
+    obtain ⟨m₁, hm₁l, hm₁r⟩ := bounded
     exists m₁
     apply And.intro
-    case left =>
-      apply And.left hm₁
-    case right =>
-      have hm₁l := And.left hm₁
-      apply And.right at hm₁
-      simp [Chapter5.BoundedBy, seq'] at hm₁
+    . exact hm₁l
+    . simp [Chapter5.BoundedBy, seq'] at hm₁r
       intro n₀ hn₀
       by_cases in_seq : a.n₀ <= n₀
-      . have hl : (n₀ - a.n₀).toNat < (n - a.n₀).toNat + 1 := by omega
-        have v := hm₁ (Fin.mk (n₀ - a.n₀).toNat hl)
+      . have v := hm₁r (Fin.mk (n₀ - a.n₀).toNat (by omega))
         simp [*] at v
         exact v
       . apply Int.lt_of_not_ge at in_seq
@@ -447,28 +442,24 @@ lemma Sequence.isBounded_of_isCauchy {a:Sequence} (h: a.IsCauchy) : a.IsBounded 
   have infinite_bounded : ∃ M, 0 ≤ M ∧ ∀ (n₀ : ℤ), n ≤ n₀ → abs (a.seq n₀) ≤ M := by
     exists abs (a.seq n) + 1
     apply And.intro
-    case left =>
-      calc 0 ≤ abs (a.seq n) := by simp
-        _ ≤ abs (a.seq n) + 1 := by simp
-    case right =>
-      intro n₀ hn₀
+    . calc 0 ≤ abs (a.seq n) := by simp
+        _ ≤ abs (a.seq n) + 1 := by linarith
+    . intro n₀ hn₀
       simp [Rat.Steady] at steady
       have n₀_bound := Int.le_trans n_bound hn₀
       have s := steady n n_bound (by rfl) n₀ n₀_bound hn₀
       simp [Rat.Close, n_bound, n₀_bound, hn₀] at s
       simp [abs_sub_comm (a.seq n) (a.seq n₀)] at s
       apply le_trans (abs_sub_abs_le_abs_sub (a.seq n₀) (a.seq n)) at s
-      linarith
+      linarith [s]
   obtain ⟨m₁, hm₁⟩ := finite_bounded
   obtain ⟨m₂, hm₂⟩ := infinite_bounded
   let m := max m₁ m₂
   exists m
   apply And.intro
-  case left =>
-    simp [m]
+  . simp [m]
     apply Or.inl hm₁.left
-  case right =>
-    intro n₀
+  . intro n₀
     by_cases finite_part : n₀ ≤ n
     . apply And.right at hm₁
       have res := hm₁ n₀ finite_part
