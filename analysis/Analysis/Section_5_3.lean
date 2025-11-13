@@ -65,7 +65,20 @@ theorem CauchySequence.coe_coe {a:ℕ → ℚ} (ha: (a:Sequence).IsCauchy) : mk'
 
 /-- Proposition 5.3.3 / Exercise 5.3.1 -/
 theorem Sequence.equiv_trans {a b c:ℕ → ℚ} (hab: Equiv a b) (hbc: Equiv b c) :
-  Equiv a c := by sorry
+  Equiv a c := by
+    rw [equiv_iff] at *
+    intro ε hε
+    have ab_bound := hab (ε / 2) (by linarith)
+    have bc_bound := hbc (ε / 2) (by linarith)
+    obtain ⟨n₁, hn₁⟩ := ab_bound
+    obtain ⟨n₂, hn₂⟩ := bc_bound
+    let n := max n₁ n₂
+    exists n
+    intro n' hn'
+    have hn₁' := hn₁ n' (by omega)
+    have hn₂' := hn₂ n' (by omega)
+    calc |a n' - c n'| ≤ |a n' - b n'| + |b n' - c n'| := abs_sub_le (a n') (b n') (c n')
+      _ ≤ ε := by linarith
 
 /-- Proposition 5.3.3 / Exercise 5.3.1 -/
 instance CauchySequence.instSetoid : Setoid CauchySequence where
