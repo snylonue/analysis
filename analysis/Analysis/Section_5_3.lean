@@ -513,7 +513,60 @@ theorem Real.mul_right_nocancel : ¬ ∀ (x y z:Real), (hz: z = 0) → (x * z = 
 
 /-- Exercise 5.3.4 -/
 theorem Real.IsBounded.equiv {a b:ℕ → ℚ} (ha: (a:Sequence).IsBounded) (hab: Sequence.Equiv a b) :
-    (b:Sequence).IsBounded := by sorry
+    (b:Sequence).IsBounded := by
+    simp [Sequence.IsBounded, Sequence.BoundedBy] at ha ⊢
+    simp [Sequence.Equiv, Rat.EventuallyClose, Rat.CloseSeq, Rat.Close] at hab
+    obtain ⟨ n, hn ⟩ := hab 1 (by linarith)
+    have finite_bounded : ∃ M, 0 ≤ M ∧ ∀ (n₀ : ℤ), n₀ ≤ abs n → |if 0 ≤ n₀ then b n₀.toNat else 0| ≤ M := by
+      let len := Fin (abs n + 1).toNat
+      let seq (i : len) : ℚ := b i
+      obtain ⟨ m, hm, bounded ⟩ := IsBounded.finite seq
+      simp [BoundedBy] at bounded
+      exists m
+      apply And.intro
+      . exact hm
+      . intro n₀ hn₀
+        by_cases valid_n : 0 ≤ n₀
+        . simp [valid_n]
+          simp [seq] at bounded
+          have v := bounded (Fin.mk n₀.toNat (by omega))
+          simp only at v
+          exact v
+        . simp [valid_n]
+          exact hm
+    have infinite_bounded : ∃ M, 0 ≤ M ∧ ∀ (n₀ : ℤ), abs n ≤ n₀ → |if 0 ≤ n₀ then b n₀.toNat else 0| ≤ M := by
+      obtain ⟨ m₀, hm₀, a_bounded ⟩ := ha
+      let m := m₀ + 1
+      exists m
+      apply And.intro
+      . simp [m]
+        linarith
+      . intro n₀ hn₀
+        have hn₀1 : 0 ≤ n₀ := calc
+          0 ≤ abs n := abs_nonneg n
+          _ ≤ n₀ := hn₀
+        have hn₀2 : n ≤ n₀ := calc
+          n ≤ abs n := le_abs_self n
+          _ ≤ n₀ := hn₀
+        have a_bound := a_bounded n₀
+        have ab_eq := hn n₀ hn₀1 hn₀2 hn₀1 hn₀2
+        simp [*] at a_bound ab_eq ⊢
+        have b_esti : |b n₀.toNat| ≤ |a n₀.toNat| + 1 := by
+          simp [abs_sub_comm (a n₀.toNat)] at ab_eq
+          apply le_trans (abs_sub_abs_le_abs_sub (b n₀.toNat) (a n₀.toNat)) at ab_eq
+          linarith [ab_eq]
+        linarith
+    obtain ⟨ m₁, hm₁, bound₁ ⟩ := finite_bounded
+    obtain ⟨ m₂, hm₂, bound₂ ⟩ := infinite_bounded
+    let m := max m₁ m₂
+    exists m
+    simp [m]
+    apply And.intro
+    . apply Or.inl hm₁
+    . intro n₀
+      by_cases finite : n₀ ≤ abs n
+      . apply Or.inl (bound₁ n₀ finite)
+      . apply Or.inr (bound₂ n₀ (le_of_not_ge finite))
 
 /--
   Same as `Sequence.IsCauchy.harmonic` but reindexing the sequence as a₀ = 1, a₁ = 1/2, ...
