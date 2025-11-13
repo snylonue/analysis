@@ -84,9 +84,27 @@ theorem Sequence.equiv_trans {a b c:ℕ → ℚ} (hab: Equiv a b) (hbc: Equiv b 
 instance CauchySequence.instSetoid : Setoid CauchySequence where
   r := fun a b ↦ Sequence.Equiv a b
   iseqv := {
-     refl := sorry
-     symm := sorry
-     trans := sorry
+     refl := by
+      intro x
+      simp [Sequence.Equiv, Rat.EventuallyClose, Rat.CloseSeq]
+      intro ε hε
+      exists 0
+      intro n hn1 hn2 _ _
+      simp [hn1, hn2, Rat.Close]
+      exact le_of_lt hε
+     symm := by
+      simp [Sequence.Equiv, Rat.EventuallyClose, Rat.CloseSeq]
+      intro x y h ε hε
+      obtain ⟨ n, hn ⟩ := h ε hε
+      exists n
+      intro n₁ hn₁1 hn₁2 hn₁3 _
+      have hn' := hn n₁ hn₁3 hn₁2 hn₁1 hn₁2
+      simp [hn₁1, hn₁2, hn₁3, Rat.Close] at hn' ⊢
+      rw [abs_sub_comm (y.seq n₁) (x.seq n₁)]
+      exact hn'
+     trans := by
+      intro _ _ _ hab hbc
+      apply Sequence.equiv_trans hab hbc
   }
 
 theorem CauchySequence.equiv_iff (a b: CauchySequence) : a ≈ b ↔ Sequence.Equiv a b := by rfl
